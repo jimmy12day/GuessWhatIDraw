@@ -1,10 +1,12 @@
-import { type FC, useMemo, useRef, useState } from 'react'
+import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { DrawingCanvas } from './canvas/DrawingCanvas'
 import { useRoomsStore } from '../state/rooms'
 import { useMockSocket } from '../mock/useMockSocket'
 import { useAiGuess } from '../mock/useAiGuess'
 import { Fireworks } from './ui/Fireworks'
+import { CountdownBadge } from './ui/CountdownBadge'
+import { OptionsGrid } from './ui/OptionsGrid'
 
 import type { Room } from '../state/rooms'
 
@@ -14,17 +16,48 @@ type Props = {
 }
 
 export const RoomView: FC<Props> = ({ roomId, onExit }) => {
-  const { rooms, self, addMessage, addPath, clearPaths, startRound, guess } = useRoomsStore()
+  const { rooms, self, addMessage, addPath, clearPaths, startRound, guess, setTimeLeft, endRound } =
+    useRoomsStore()
   const room = rooms.find((r) => r.id === roomId) as Room | undefined
   const [guessText, setGuessText] = useState('')
   const [aiResult, setAiResult] = useState<string>('')
   const [showFireworks, setShowFireworks] = useState(false)
+  const [showNextPrompt, setShowNextPrompt] = useState(false)
   const chatRef = useRef<HTMLDivElement>(null)
+  const timerRef = useRef<number | null>(null)
 
   useMockSocket(roomId)
   const ai = useAiGuess()
 
   const painter = useMemo(() => room?.players.find((p) => p.id === room?.painterId), [room])
+
+  useEffect(() => {
+    if (!room) return
+    if (room.phase === 'drawing') {
+      setShowNextPrompt(false)
+      setAiResult('')
+      if (timerRef.current) window.clearInterval(timerRef.current)
+      let timeLeft = 60
+      setTimeLeft(room.id, timeLeft)
+      timerRef.current = window.setInterval(() => {
+        timeLeft -= 1
+        if (timeLeft <= 0) {
+          if (timerRef.current) window.clearInterval(timerRef.current)
+          endRound(room.id)
+        } else {
+          setTimeLeft(room.id, timeLeft)
+        }
+      }, 1000)
+    }
+    if (room.phase === 'reveal') {
+      if (timerRef.current) window.clearInterval(timerRef.current)
+      setShowNextPrompt(true)
+      setTimeout(() => setShowNextPrompt(false), 5000)
+    }
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current)
+    }
+  }, [room?.phase])
 
   if (!room) return null
 
@@ -37,6 +70,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       setAiResult('猜对了！')
       setShowFireworks(true)
       setTimeout(() => setShowFireworks(false), 3000)
+      endRound(room.id, self.name)
     } else {
       setAiResult('AI判定未命中')
     }
@@ -47,6 +81,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     startRound(room.id)
     clearPaths(room.id)
     setAiResult('')
+    setShowNextPrompt(false)
   }
 
   const handleAiAssist = async () => {
@@ -59,6 +94,18 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] min-h-0">
       <section className="border-r border-white/5 bg-slate-950/40 backdrop-blur p-6 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
+        {room.phase === 'reveal' && room.winnerName && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-4xl md:text-6xl font-black text-white drop-shadow-[0_5px_20px_rgba(0,0,0,0.45)]">
+              恭喜 {room.winnerName} 猜对！
+            </div>
+          </div>
+        )}
+        {room.phase === 'reveal' && showNextPrompt && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-sm text-slate-200">
+            5 秒后可开始下一局
+          </div>
+        )}
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-sm text-slate-400">房间</p>
@@ -84,7 +131,9 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           {room.word && <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>}
           {room.hint && <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>}
           {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
+          <CountdownBadge seconds={room.timeLeft} />
         </div>
+        <OptionsGrid options={room.answerOptions} />
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">
           <DrawingCanvas
             roomId={room.id}
