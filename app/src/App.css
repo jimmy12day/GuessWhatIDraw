@@ -1,0 +1,47 @@
+:root {
+  color-scheme: only light;
+}
+
+body {
+  background: #070b13;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.fireworks-layer {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.firework {
+  position: absolute;
+  width: var(--size, 120px);
+  height: var(--size, 120px);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color, #ff8a3d) 0%, transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.3);
+  animation: burst 1s ease-out forwards;
+  filter: drop-shadow(0 0 12px var(--color, #ff8a3d));
+}
+
+@keyframes burst {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+}
