@@ -9,6 +9,7 @@ export type Player = {
   score: number
   isHost?: boolean
   color: string
+  role?: 'painter' | 'guesser'
 }
 
 export type DrawingPoint = { x: number; y: number }
@@ -43,6 +44,7 @@ type Store = {
   createRoom: (name: string) => string
   joinRoom: (roomId: string, player?: Player) => void
   leaveRoom: (roomId: string, playerId?: string) => void
+  setPlayerRole: (roomId: string, playerId: string, role: Player['role']) => void
   addMessage: (roomId: string, text: string) => void
   addPath: (roomId: string, path: DrawingPath) => void
   clearPaths: (roomId: string) => void
@@ -109,10 +111,50 @@ export const useRoomsStore = create<Store>((set, get) => ({
     const targetId = playerId ?? get().self.id
     set((state) => ({
       rooms: state.rooms
-        .map((room) =>
-          room.id === roomId ? { ...room, players: room.players.filter((p) => p.id !== targetId) } : room,
-        )
+        .map((room) => {
+          if (room.id !== roomId) return room
+          const remainingPlayers = room.players.filter((p) => p.id !== targetId)
+          if (remainingPlayers.length === 0) {
+            return { ...room, players: remainingPlayers, painterId: undefined }
+          }
+          const stillHasPainter = remainingPlayers.some((p) => p.id === room.painterId)
+          if (stillHasPainter) {
+            return { ...room, players: remainingPlayers }
+          }
+          const nextPainterId = remainingPlayers[0].id
+          return {
+            ...room,
+            painterId: nextPainterId,
+            players: remainingPlayers.map((player) =>
+              player.id === nextPainterId
+                ? { ...player, role: 'painter' as const }
+                : { ...player, role: 'guesser' as const },
+            ),
+          }
+        })
         .filter((room) => room.players.length > 0),
+    }))
+  },
+  setPlayerRole: (roomId, playerId, role) => {
+    set((state) => ({
+      rooms: state.rooms.map((room) => {
+        if (room.id !== roomId) return room
+        const nextPainterId =
+          role === 'painter'
+            ? playerId
+            : room.painterId === playerId
+              ? undefined
+              : room.painterId
+        return {
+          ...room,
+          painterId: nextPainterId,
+          players: room.players.map((player) => {
+            if (player.id === playerId) return { ...player, role }
+            if (role === 'painter') return { ...player, role: 'guesser' }
+            return player
+          }),
+        }
+      }),
     }))
   },
   addMessage: (roomId, text) => {
@@ -150,21 +192,22 @@ export const useRoomsStore = create<Store>((set, get) => ({
     const answerOptions = [...optionsPool, nextWord.word].sort(() => Math.random() - 0.5)
 
     set((state) => ({
-      rooms: state.rooms.map((room) =>
-        room.id === roomId
-          ? {
-              ...room,
-              phase: 'drawing',
-              word: nextWord.word,
-              hint: nextWord.hint,
-              painterId: room.players[0]?.id,
-              timeLeft: 60,
-              paths: [],
-              answerOptions,
-              winnerName: undefined,
-            }
-          : room,
-      ),
+      rooms: state.rooms.map((room) => {
+        if (room.id !== roomId) return room
+        const painterId =
+          room.players.find((player) => player.role === 'painter')?.id ?? room.players[0]?.id
+        return {
+          ...room,
+          phase: 'drawing',
+          word: nextWord.word,
+          hint: nextWord.hint,
+          painterId,
+          timeLeft: 60,
+          paths: [],
+          answerOptions,
+          winnerName: undefined,
+        }
+      }),
     }))
   },
   setTimeLeft: (roomId, timeLeft) => {

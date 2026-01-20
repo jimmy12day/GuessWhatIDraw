@@ -47,6 +47,7 @@ export const Lobby: FC<Props> = ({ rooms, onJoin, onCreate }) => {
                   </span>
                 </div>
                 <p className="text-sm text-slate-400 mt-2">状态：{room.phase === 'lobby' ? '准备中' : '进行中'}</p>
+                <p className="text-xs text-slate-500 mt-1">已有 {room.players.length} 名玩家，是否加入？</p>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {room.players.map((p) => (
                     <span

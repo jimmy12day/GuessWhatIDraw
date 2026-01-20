@@ -16,13 +16,25 @@ type Props = {
 }
 
 export const RoomView: FC<Props> = ({ roomId, onExit }) => {
-  const { rooms, self, addMessage, addPath, clearPaths, startRound, guess, setTimeLeft, endRound } =
-    useRoomsStore()
+  const {
+    rooms,
+    self,
+    addMessage,
+    addPath,
+    clearPaths,
+    startRound,
+    guess,
+    setTimeLeft,
+    endRound,
+    setPlayerRole,
+  } = useRoomsStore()
   const room = rooms.find((r) => r.id === roomId) as Room | undefined
+  const selfPlayer = room?.players.find((player) => player.id === self.id)
   const [guessText, setGuessText] = useState('')
   const [aiResult, setAiResult] = useState<string>('')
   const [showFireworks, setShowFireworks] = useState(false)
   const [showNextPrompt, setShowNextPrompt] = useState(false)
+  const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false)
   const chatRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<number | null>(null)
 
@@ -95,8 +107,73 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     setAiResult(r.message)
   }
 
+  const handleRoleSelect = (role: 'painter' | 'guesser') => {
+    if (!room) return
+    setPlayerRole(room.id, self.id, role)
+  }
+
+  const handleTakePainter = () => {
+    if (!room) return
+    setShowTakeoverConfirm(true)
+  }
+
+  const confirmTakePainter = () => {
+    if (!room) return
+    setPlayerRole(room.id, self.id, 'painter')
+    setShowTakeoverConfirm(false)
+  }
+
+  const cancelTakePainter = () => {
+    setShowTakeoverConfirm(false)
+  }
+
   return (
-    <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] min-h-0">
+    <main className="relative flex-1 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] min-h-0">
+      {!selfPlayer?.role && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-panel px-6 py-7 text-center shadow-card">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">加入成功</p>
+            <h3 className="mt-2 text-2xl font-semibold">请选择角色</h3>
+            <p className="mt-2 text-sm text-slate-400">画家负责绘制，猜谜者负责答题。</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/30"
+                onClick={() => handleRoleSelect('painter')}
+              >
+                我是画家
+              </button>
+              <button
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                onClick={() => handleRoleSelect('guesser')}
+              >
+                我是猜谜者
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showTakeoverConfirm && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-panel px-6 py-6 text-center shadow-card">
+            <h4 className="text-lg font-semibold">确认接管画家？</h4>
+            <p className="mt-2 text-sm text-slate-400">当前画家将自动变为猜谜者。</p>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <button
+                className="px-4 py-2 rounded-lg bg-white/10 text-sm text-slate-200 hover:bg-white/15"
+                onClick={cancelTakePainter}
+              >
+                取消
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-accent/20 text-sm font-semibold text-accent hover:bg-accent/30"
+                onClick={confirmTakePainter}
+              >
+                确认接管
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="border-r border-white/5 bg-slate-950/40 backdrop-blur p-6 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
         {room.phase === 'reveal' && room.winnerName && (
@@ -111,33 +188,58 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
             5 秒后可开始下一局
           </div>
         )}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-sm text-slate-400">房间</p>
-            <h2 className="text-xl font-semibold">{room.name}</h2>
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="px-3 py-2 rounded-lg bg-white/10 text-sm"
-              onClick={handleStart}
-            >
-              开始/重开
-            </button>
-            <button
-              className="px-3 py-2 rounded-lg bg-white/10 text-sm"
-              onClick={onExit}
-            >
-              退出房间
-            </button>
-          </div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm text-slate-400">房间</p>
+              <h2 className="text-xl font-semibold">{room.name}</h2>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              {selfPlayer?.role !== 'painter' && (
+                <span className="text-xs text-slate-500">只有画家可以开始游戏</span>
+              )}
+              <div className="flex gap-2">
+                {selfPlayer?.role === 'guesser' && (
+                  <button
+                    className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-sm font-semibold hover:bg-accent/30"
+                    onClick={handleTakePainter}
+                  >
+                    接管画家
+                  </button>
+                )}
+                <button
+                  className={classNames(
+                    'px-3 py-2 rounded-lg text-sm',
+                    selfPlayer?.role === 'painter'
+                    ? 'bg-white/10 hover:bg-white/15'
+                    : 'bg-white/5 text-slate-500 cursor-not-allowed',
+                )}
+                onClick={handleStart}
+                disabled={selfPlayer?.role !== 'painter'}
+                title={selfPlayer?.role === 'painter' ? '开始或重开本局' : '只有画家可以开始游戏'}
+              >
+                开始/重开
+              </button>
+              <button
+                className="px-3 py-2 rounded-lg bg-white/10 text-sm"
+                onClick={onExit}
+              >
+                退出房间
+              </button>
+              </div>
+            </div>
         </div>
-        <div className="flex items-center gap-3 mb-3 text-sm text-slate-300">
-          <span className="px-2 py-1 rounded bg-white/10">阶段：{room.phase}</span>
-          {room.word && <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>}
-          {room.hint && <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>}
-          {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
-          <CountdownBadge seconds={room.timeLeft} />
-        </div>
+          <div className="flex items-center gap-3 mb-3 text-sm text-slate-300">
+            <span className="px-2 py-1 rounded bg-white/10">阶段：{room.phase}</span>
+            {room.word && <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>}
+            {room.hint && <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>}
+            {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
+            {selfPlayer?.role && (
+              <span className="px-2 py-1 rounded bg-white/10">
+                你的角色：{selfPlayer.role === 'painter' ? '画家' : '猜谜者'}
+              </span>
+            )}
+            <CountdownBadge seconds={room.timeLeft} />
+          </div>
         <OptionsGrid options={room.answerOptions} />
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">
           <DrawingCanvas
@@ -201,6 +303,11 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               >
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
                 {p.name}
+                {p.role && (
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                    {p.role === 'painter' ? '画家' : '猜谜者'}
+                  </span>
+                )}
               </div>
             ))}
           </div>
