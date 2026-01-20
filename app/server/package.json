@@ -1,0 +1,11 @@
+{
+  "name": "sketch-arena-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.1"
+  }
+}

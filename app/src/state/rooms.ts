@@ -41,8 +41,8 @@ type Store = {
   rooms: Room[]
   currentWord?: string
   createRoom: (name: string) => string
-  joinRoom: (roomId: string) => void
-  leaveRoom: (roomId: string) => void
+  joinRoom: (roomId: string, player?: Player) => void
+  leaveRoom: (roomId: string, playerId?: string) => void
   addMessage: (roomId: string, text: string) => void
   addPath: (roomId: string, path: DrawingPath) => void
   clearPaths: (roomId: string) => void
@@ -53,23 +53,24 @@ type Store = {
 }
 
 const randomColor = () => {
-
   const palette = ['#ff8a3d', '#5de4c7', '#7c3aed', '#22d3ee', '#f472b6', '#facc15']
   return palette[Math.floor(Math.random() * palette.length)]
 }
 
-const defaultSelf: Player = {
+const createPlayer = (): Player => ({
   id: nanoid(6),
   name: `玩家-${Math.floor(Math.random() * 90 + 10)}`,
   score: 0,
   isHost: true,
   color: randomColor(),
-}
+})
+
+const defaultSelf = createPlayer()
 
 const initialRoom: Room = {
   id: 'demo',
   name: '示例房间',
-  players: [defaultSelf],
+  players: [],
   paths: [],
   messages: [],
   phase: 'lobby',
@@ -83,7 +84,7 @@ export const useRoomsStore = create<Store>((set, get) => ({
     const room: Room = {
       id: nanoid(6),
       name,
-      players: [get().self],
+      players: [],
       paths: [],
       messages: [],
       phase: 'lobby',
@@ -91,22 +92,25 @@ export const useRoomsStore = create<Store>((set, get) => ({
     set((state) => ({ rooms: [...state.rooms, room] }))
     return room.id
   },
-  joinRoom: (roomId) => {
+  joinRoom: (roomId, player) => {
+    const fallbackPlayer = player ?? get().self
     set((state) => ({
       rooms: state.rooms.map((room) =>
-        room.id === roomId && !room.players.find((p) => p.id === state.self.id)
-          ? { ...room, players: [...room.players, { ...state.self, isHost: room.players.length === 0 }] }
+        room.id === roomId && !room.players.find((p) => p.id === fallbackPlayer.id)
+          ? {
+              ...room,
+              players: [...room.players, { ...fallbackPlayer, isHost: room.players.length === 0 }],
+            }
           : room,
       ),
     }))
   },
-  leaveRoom: (roomId) => {
+  leaveRoom: (roomId, playerId) => {
+    const targetId = playerId ?? get().self.id
     set((state) => ({
       rooms: state.rooms
         .map((room) =>
-          room.id === roomId
-            ? { ...room, players: room.players.filter((p) => p.id !== state.self.id) }
-            : room,
+          room.id === roomId ? { ...room, players: room.players.filter((p) => p.id !== targetId) } : room,
         )
         .filter((room) => room.players.length > 0),
     }))

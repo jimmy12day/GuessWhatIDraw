@@ -29,6 +29,12 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   useMockSocket(roomId)
   const ai = useAiGuess()
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current)
+    }
+  }, [])
+
   const painter = useMemo(() => room?.players.find((p) => p.id === room?.painterId), [room])
 
   useEffect(() => {
@@ -52,11 +58,10 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     if (room.phase === 'reveal') {
       if (timerRef.current) window.clearInterval(timerRef.current)
       setShowNextPrompt(true)
-      setTimeout(() => setShowNextPrompt(false), 5000)
+      const timeoutId = window.setTimeout(() => setShowNextPrompt(false), 5000)
+      return () => window.clearTimeout(timeoutId)
     }
-    return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current)
-    }
+    return undefined
   }, [room?.phase])
 
   if (!room) return null

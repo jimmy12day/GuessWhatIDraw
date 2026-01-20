@@ -6,7 +6,7 @@ import { useRoomsStore } from './state/rooms'
 import './App.css'
 
 function App() {
-  const { rooms, createRoom } = useRoomsStore()
+  const { rooms, createRoom, joinRoom, leaveRoom } = useRoomsStore()
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
 
   const sortedRooms = useMemo(
@@ -16,7 +16,18 @@ function App() {
 
   const handleCreate = (name: string) => {
     const id = createRoom(name)
+    joinRoom(id)
     setCurrentRoomId(id)
+  }
+
+  const handleJoin = (roomId: string) => {
+    joinRoom(roomId)
+    setCurrentRoomId(roomId)
+  }
+
+  const handleExit = (roomId: string) => {
+    leaveRoom(roomId)
+    setCurrentRoomId(null)
   }
 
   return (
@@ -38,9 +49,9 @@ function App() {
       </header>
 
       {currentRoomId ? (
-        <RoomView roomId={currentRoomId} onExit={() => setCurrentRoomId(null)} />
+        <RoomView roomId={currentRoomId} onExit={() => handleExit(currentRoomId)} />
       ) : (
-        <Lobby rooms={sortedRooms} onJoin={setCurrentRoomId} onCreate={handleCreate} />
+        <Lobby rooms={sortedRooms} onJoin={handleJoin} onCreate={handleCreate} />
       )}
     </div>
   )
