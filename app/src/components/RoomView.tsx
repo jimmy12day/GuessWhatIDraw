@@ -4,7 +4,6 @@ import { DrawingCanvas } from './canvas/DrawingCanvas'
 import { useRoomsStore } from '../state/rooms'
 import { useAiGuess } from '../mock/useAiGuess'
 import { Fireworks } from './ui/Fireworks'
-import { CountdownBadge } from './ui/CountdownBadge'
 import { OptionsGrid } from './ui/OptionsGrid'
 
 import type { Room } from '../state/rooms'
@@ -27,6 +26,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     setTimeLeft,
     endRound,
     setPlayerRole,
+    resetRoles,
   } = useRoomsStore()
   const room = rooms.find((r) => r.id === roomId) as Room | undefined
   const roomKey = room?.id
@@ -70,6 +70,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         if (timeLeft <= 0) {
           if (timerRef.current) window.clearInterval(timerRef.current)
           endRound(roomKey)
+          resetRoles(roomKey)
         } else {
           setTimeLeft(roomKey, timeLeft)
         }
@@ -86,7 +87,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       }
     }
     return undefined
-  }, [endRound, roomKey, roomPhase, setTimeLeft])
+  }, [endRound, resetRoles, roomKey, roomPhase, setTimeLeft])
 
   if (!room) return null
 
@@ -196,10 +197,15 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           </div>
         )}
         {room.phase === 'reveal' && showNextPrompt && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-sm text-slate-200">
-            5 秒后可开始下一局
-          </div>
-        )}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-sm text-slate-200">
+              本轮结束，重新选择角色后可开始下一轮
+            </div>
+          )}
+          {room.timeLeft !== undefined && (
+            <div className="absolute top-4 right-4 px-3 py-2 rounded-lg bg-black/60 text-sm text-slate-100">
+              {room.timeLeft}s
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm text-slate-400">房间</p>
@@ -250,7 +256,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
                 你的角色：{selfPlayer.role === 'painter' ? '画家' : '猜谜者'}
               </span>
             )}
-            <CountdownBadge seconds={room.timeLeft} />
           </div>
         <OptionsGrid options={room.answerOptions} />
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">

@@ -51,6 +51,7 @@ type Store = {
   startRound: (roomId: string) => void
   setTimeLeft: (roomId: string, timeLeft: number) => void
   endRound: (roomId: string, winnerName?: string) => void
+  resetRoles: (roomId: string) => void
   guess: (roomId: string, text: string) => { isCorrect: boolean; target?: string }
 }
 
@@ -220,6 +221,19 @@ export const useRoomsStore = create<Store>((set, get) => ({
       rooms: state.rooms.map((room) =>
         room.id === roomId
           ? { ...room, phase: 'reveal', timeLeft: undefined, winnerName }
+          : room,
+      ),
+    }))
+  },
+  resetRoles: (roomId) => {
+    set((state) => ({
+      rooms: state.rooms.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              painterId: undefined,
+              players: room.players.map((player) => ({ ...player, role: undefined })),
+            }
           : room,
       ),
     }))
