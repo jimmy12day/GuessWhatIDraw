@@ -201,16 +201,20 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               本轮结束，重新选择角色后可开始下一轮
             </div>
           )}
+          <button
+            className="absolute top-3 right-3 h-11 w-11 rounded-full bg-black/70 text-xl text-slate-100 hover:bg-black/80"
+            onClick={onExit}
+            aria-label="退出房间"
+            type="button"
+          >
+            ×
+          </button>
           {room.timeLeft !== undefined && (
-            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/60 text-xs text-slate-100">
+            <div className="absolute top-3 right-16 px-3 py-1.5 rounded-lg bg-black/60 text-xs text-slate-100">
               {room.timeLeft}s
             </div>
           )}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs text-slate-400">房间</p>
-              <h2 className="text-lg font-semibold">{room.name}</h2>
-            </div>
+          <div className="flex items-center justify-end mb-4">
             <div className="flex flex-col items-end gap-2">
               {selfPlayer?.role !== 'painter' && (
                 <span className="text-[11px] text-slate-500">只有画家可以开始游戏</span>
@@ -234,19 +238,20 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
                 onClick={handleStart}
                 disabled={selfPlayer?.role !== 'painter'}
                 title={selfPlayer?.role === 'painter' ? '开始或重开本局' : '只有画家可以开始游戏'}
-              >
-                开始/重开
+                >
+                开始
               </button>
-                <button className="px-3 py-2 rounded-lg bg-white/10 text-xs" onClick={onExit}>
-                  退出房间
-                </button>
-              </div>
             </div>
+          </div>
         </div>
           <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-slate-300">
             <span className="px-2 py-1 rounded bg-white/10">阶段：{room.phase}</span>
-            {room.word && <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>}
-            {room.hint && <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>}
+            {selfPlayer?.role === 'painter' && room.word && (
+              <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>
+            )}
+            {selfPlayer?.role === 'painter' && room.hint && (
+              <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>
+            )}
             {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
             {selfPlayer?.role && (
               <span className="px-2 py-1 rounded bg-white/10">
@@ -254,7 +259,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               </span>
             )}
           </div>
-        <OptionsGrid options={room.answerOptions} />
+        {selfPlayer?.role === 'painter' && <OptionsGrid options={room.answerOptions} />}
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">
           <DrawingCanvas
             roomId={room.id}
@@ -306,25 +311,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         </div>
         <div className="p-4 border-t border-white/5 bg-panel/90">
           <h4 className="text-xs text-slate-400 mb-2">玩家</h4>
-          <div className="flex flex-wrap gap-2">
-            {room.players.map((p) => (
-              <div
-                key={p.id}
-                className={classNames(
-                  'px-3 py-2 rounded-lg border border-white/5 text-xs flex items-center gap-2',
-                  p.id === room.painterId && 'border-accent text-accent',
-                )}
-              >
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
-                {p.name}
-                {p.role && (
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
-                    {p.role === 'painter' ? '画家' : '猜谜者'}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+          <div className="text-xs text-slate-300">当前玩家数：{room.players.length}</div>
         </div>
       </section>
     </main>
