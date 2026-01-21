@@ -141,22 +141,22 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   }
 
   return (
-    <main className="relative flex-1 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] min-h-0">
+    <main className="room-layout relative flex-1 min-h-0">
       {!selfPlayer?.role && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-panel px-6 py-7 text-center shadow-card">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">加入成功</p>
-            <h3 className="mt-2 text-2xl font-semibold">请选择角色</h3>
-            <p className="mt-2 text-sm text-slate-400">画家负责绘制，猜谜者负责答题。</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-500">加入成功</p>
+            <h3 className="mt-2 text-lg font-semibold">请选择角色</h3>
+            <p className="mt-2 text-xs text-slate-400">画家负责绘制，猜谜者负责答题。</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <button
-                className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/30"
+                className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-3 text-xs font-semibold text-accent hover:bg-accent/30"
                 onClick={() => handleRoleSelect('painter')}
               >
                 我是画家
               </button>
               <button
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-slate-100 hover:bg-white/10"
                 onClick={() => handleRoleSelect('guesser')}
               >
                 我是猜谜者
@@ -168,8 +168,8 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       {showTakeoverConfirm && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-panel px-6 py-6 text-center shadow-card">
-            <h4 className="text-lg font-semibold">确认接管画家？</h4>
-            <p className="mt-2 text-sm text-slate-400">当前画家将自动变为猜谜者。</p>
+            <h4 className="text-base font-semibold">确认接管画家？</h4>
+            <p className="mt-2 text-xs text-slate-400">当前画家将自动变为猜谜者。</p>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
                 className="px-4 py-2 rounded-lg bg-white/10 text-sm text-slate-200 hover:bg-white/15"
@@ -187,7 +187,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           </div>
         </div>
       )}
-      <section className="border-r border-white/5 bg-slate-950/40 backdrop-blur p-6 flex flex-col min-h-0">
+      <section className="room-stage border-r border-white/5 bg-slate-950/40 backdrop-blur p-4 sm:p-6 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
         {room.phase === 'reveal' && room.winnerName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -196,29 +196,29 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
             </div>
           </div>
         )}
-        {room.phase === 'reveal' && showNextPrompt && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-sm text-slate-200">
+          {room.phase === 'reveal' && showNextPrompt && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-xs text-slate-200">
               本轮结束，重新选择角色后可开始下一轮
             </div>
           )}
           {room.timeLeft !== undefined && (
-            <div className="absolute top-4 right-4 px-3 py-2 rounded-lg bg-black/60 text-sm text-slate-100">
+            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/60 text-xs text-slate-100">
               {room.timeLeft}s
             </div>
           )}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-slate-400">房间</p>
-              <h2 className="text-xl font-semibold">{room.name}</h2>
+              <p className="text-xs text-slate-400">房间</p>
+              <h2 className="text-lg font-semibold">{room.name}</h2>
             </div>
             <div className="flex flex-col items-end gap-2">
               {selfPlayer?.role !== 'painter' && (
-                <span className="text-xs text-slate-500">只有画家可以开始游戏</span>
+                <span className="text-[11px] text-slate-500">只有画家可以开始游戏</span>
               )}
               <div className="flex gap-2">
                 {selfPlayer?.role === 'guesser' && (
                   <button
-                    className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-sm font-semibold hover:bg-accent/30"
+                    className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-xs font-semibold hover:bg-accent/30"
                     onClick={handleTakePainter}
                   >
                     接管画家
@@ -226,7 +226,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
                 )}
                 <button
                   className={classNames(
-                    'px-3 py-2 rounded-lg text-sm',
+                    'px-3 py-2 rounded-lg text-xs',
                     selfPlayer?.role === 'painter'
                     ? 'bg-white/10 hover:bg-white/15'
                     : 'bg-white/5 text-slate-500 cursor-not-allowed',
@@ -237,16 +237,13 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               >
                 开始/重开
               </button>
-              <button
-                className="px-3 py-2 rounded-lg bg-white/10 text-sm"
-                onClick={onExit}
-              >
-                退出房间
-              </button>
+                <button className="px-3 py-2 rounded-lg bg-white/10 text-xs" onClick={onExit}>
+                  退出房间
+                </button>
               </div>
             </div>
         </div>
-          <div className="flex items-center gap-3 mb-3 text-sm text-slate-300">
+          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-slate-300">
             <span className="px-2 py-1 rounded bg-white/10">阶段：{room.phase}</span>
             {room.word && <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>}
             {room.hint && <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>}
@@ -269,15 +266,15 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         </div>
       </section>
 
-      <section className="flex flex-col bg-panel/80 border-l border-white/5 min-h-0">
-        <div className="p-6 border-b border-white/5">
-          <h3 className="text-lg font-semibold">猜词 / 聊天</h3>
-          <p className="text-sm text-slate-400 mt-1">与房间玩家互动，也可请 AI 协助。</p>
+      <section className="room-chat flex flex-col bg-panel/80 border-l border-white/5 min-h-0">
+        <div className="p-4 border-b border-white/5">
+          <h3 className="text-base font-semibold">猜词 / 聊天</h3>
+          <p className="text-xs text-slate-400 mt-1">与房间玩家互动，也可请 AI 协助。</p>
         </div>
         <div className="flex-1 grid grid-rows-[1fr_auto] min-h-0">
           <div className="overflow-y-auto p-4 space-y-2" ref={chatRef}>
             {room.messages.map((m) => (
-              <div key={m.id} className="text-sm text-slate-200">
+              <div key={m.id} className="text-xs text-slate-200">
                 <span className="text-slate-500 mr-2">[{new Date(m.ts).toLocaleTimeString()}]</span>
                 {m.from}：{m.text}
               </div>
@@ -288,33 +285,33 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               <input
                 value={guessText}
                 onChange={(e) => setGuessText(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-white/5 text-sm"
+                className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-white/5 text-xs"
                 placeholder="输入猜测或聊天"
               />
               <button
                 onClick={handleSend}
-                className="px-4 py-2 rounded-lg bg-accent text-slate-950 font-semibold"
+                className="px-4 py-2 rounded-lg bg-accent text-slate-950 text-xs font-semibold"
               >
                 发送
               </button>
               <button
                 onClick={handleAiAssist}
-                className="px-3 py-2 rounded-lg bg-white/10 text-sm"
+                className="px-3 py-2 rounded-lg bg-white/10 text-xs"
               >
                 AI辅助
               </button>
             </div>
-            {aiResult && <div className="text-xs text-slate-400">{aiResult}</div>}
+            {aiResult && <div className="text-[11px] text-slate-400">{aiResult}</div>}
           </div>
         </div>
         <div className="p-4 border-t border-white/5 bg-panel/90">
-          <h4 className="text-sm text-slate-400 mb-2">玩家</h4>
+          <h4 className="text-xs text-slate-400 mb-2">玩家</h4>
           <div className="flex flex-wrap gap-2">
             {room.players.map((p) => (
               <div
                 key={p.id}
                 className={classNames(
-                  'px-3 py-2 rounded-lg border border-white/5 text-sm flex items-center gap-2',
+                  'px-3 py-2 rounded-lg border border-white/5 text-xs flex items-center gap-2',
                   p.id === room.painterId && 'border-accent text-accent',
                 )}
               >
