@@ -42,11 +42,50 @@ body {
   min-height: 0;
 }
 
-.room-chat {
-  flex: 0 0 auto;
-  height: 34dvh;
-  min-height: 0;
+.chat-side {
+  width: min(25%, 220px);
+  min-width: 140px;
+  max-width: 25%;
   padding-bottom: var(--keyboard-offset, 0px);
+}
+
+.chat-side-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.chat-drawer {
+  transition: transform 0.2s ease;
+}
+
+.chat-drawer--closed {
+  transform: translateX(calc(100% - 28px));
+}
+
+.chat-drawer--closed .chat-body {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-handle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 72px;
+  border-radius: 12px 0 0 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.12em;
 }
 
 .fireworks-layer {
