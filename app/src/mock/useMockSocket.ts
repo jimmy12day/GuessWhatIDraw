@@ -4,14 +4,17 @@ import { useRoomsStore } from '../state/rooms'
 const SOCKET_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3001'
 
 type RoomsPayload = { type: 'rooms:update'; rooms: unknown }
+type PresencePayload = { type: 'presence:update'; roomId?: string; playerId: string; playerName: string; playerColor: string }
 
 type RoomsRequest = { type: 'rooms:request' }
 
 export const useMockSocket = (roomId: string) => {
   const lastRoomsRef = useRef(useRoomsStore.getState().rooms)
   const suppressRef = useRef(false)
+  const selfRef = useRef(useRoomsStore.getState().self)
 
   useEffect(() => {
+    selfRef.current = useRoomsStore.getState().self
     let ws: WebSocket | null = null
     let reconnectTimer: number | null = null
     let active = true
@@ -22,6 +25,16 @@ export const useMockSocket = (roomId: string) => {
 
       ws.addEventListener('open', () => {
         ws?.send(JSON.stringify({ type: 'rooms:request' } satisfies RoomsRequest))
+        const self = selfRef.current
+        ws?.send(
+          JSON.stringify({
+            type: 'presence:update',
+            roomId,
+            playerId: self.id,
+            playerName: self.name,
+            playerColor: self.color,
+          } satisfies PresencePayload),
+        )
       })
 
       ws.addEventListener('message', (event) => {
@@ -47,6 +60,37 @@ export const useMockSocket = (roomId: string) => {
 
     connect()
 
+    const handlePresence = () => {
+      if (ws?.readyState !== WebSocket.OPEN) return
+      const self = selfRef.current
+      ws.send(
+        JSON.stringify({
+          type: 'presence:update',
+          roomId,
+          playerId: self.id,
+          playerName: self.name,
+          playerColor: self.color,
+        } satisfies PresencePayload),
+      )
+    }
+
+    const handleUnload = () => {
+      if (ws?.readyState !== WebSocket.OPEN) return
+      const self = selfRef.current
+      ws.send(
+        JSON.stringify({
+          type: 'presence:update',
+          roomId: undefined,
+          playerId: self.id,
+          playerName: self.name,
+          playerColor: self.color,
+        } satisfies PresencePayload),
+      )
+    }
+
+    handlePresence()
+    window.addEventListener('beforeunload', handleUnload)
+
     const unsubStore = useRoomsStore.subscribe(() => {
       if (suppressRef.current) return
       const rooms = useRoomsStore.getState().rooms
@@ -60,6 +104,8 @@ export const useMockSocket = (roomId: string) => {
     return () => {
       active = false
       if (reconnectTimer) window.clearTimeout(reconnectTimer)
+      window.removeEventListener('beforeunload', handleUnload)
+      handleUnload()
       ws?.close()
       unsubStore()
     }

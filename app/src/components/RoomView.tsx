@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { DrawingCanvas } from './canvas/DrawingCanvas'
 import { useRoomsStore } from '../state/rooms'
@@ -35,7 +35,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   const [guessText, setGuessText] = useState('')
   const [aiResult, setAiResult] = useState<string>('')
   const [showFireworks, setShowFireworks] = useState(false)
-  const [showNextPrompt, setShowNextPrompt] = useState(false)
   const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false)
   const chatRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<number | null>(null)
@@ -48,7 +47,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     }
   }, [])
 
-  const painter = useMemo(() => room?.players.find((p) => p.id === room?.painterId), [room])
 
   useEffect(() => {
     if (!room || selfPlayer) return
@@ -59,7 +57,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     if (!roomKey || !roomPhase) return
     if (roomPhase === 'drawing') {
       const promptResetId = window.setTimeout(() => {
-        setShowNextPrompt(false)
         setAiResult('')
       }, 0)
       if (timerRef.current) window.clearInterval(timerRef.current)
@@ -79,12 +76,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     }
     if (roomPhase === 'reveal') {
       if (timerRef.current) window.clearInterval(timerRef.current)
-      const promptStartId = window.setTimeout(() => setShowNextPrompt(true), 0)
-      const promptEndId = window.setTimeout(() => setShowNextPrompt(false), 5000)
-      return () => {
-        window.clearTimeout(promptStartId)
-        window.clearTimeout(promptEndId)
-      }
     }
     return undefined
   }, [endRound, resetRoles, roomKey, roomPhase, setTimeLeft])
@@ -111,7 +102,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     startRound(room.id)
     clearPaths(room.id)
     setAiResult('')
-    setShowNextPrompt(false)
   }
 
   const handleAiAssist = async () => {
@@ -187,18 +177,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       )}
       <section className="room-stage border-b border-white/5 bg-slate-950/40 backdrop-blur p-4 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
-        {room.phase === 'reveal' && room.winnerName && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-4xl md:text-6xl font-black text-white drop-shadow-[0_5px_20px_rgba(0,0,0,0.45)]">
-              恭喜 {room.winnerName} 猜对！
-            </div>
-          </div>
-        )}
-          {room.phase === 'reveal' && showNextPrompt && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-xs text-slate-200">
-              本轮结束
-            </div>
-          )}
           <button
             className="absolute top-3 right-3 h-11 w-11 rounded-full bg-black/70 text-xl text-slate-100 hover:bg-black/80"
             onClick={onExit}
@@ -239,18 +217,9 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
             </div>
           </div>
         </div>
-          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-slate-300">
-            <span className="px-2 py-1 rounded bg-white/10">阶段：{room.phase}</span>
-            {selfPlayer?.role === 'painter' && room.word && (
-              <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>
-            )}
-            {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
-            {selfPlayer?.role && (
-              <span className="px-2 py-1 rounded bg-white/10">
-                你的角色：{selfPlayer.role === 'painter' ? '画家' : '猜谜者'}
-              </span>
-            )}
-          </div>
+          {selfPlayer?.role === 'painter' && room.word && (
+            <div className="mb-3 text-xs text-accent">{room.word}</div>
+          )}
         {selfPlayer?.role === 'painter' && <OptionsGrid options={room.answerOptions} />}
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">
           <DrawingCanvas

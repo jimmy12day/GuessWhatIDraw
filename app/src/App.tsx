@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { RoomView } from './components/RoomView'
 import { Lobby } from './components/Lobby'
@@ -11,6 +11,27 @@ function App() {
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
 
   useMockSocket(currentRoomId ?? 'lobby')
+
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return undefined
+
+    const updateViewport = () => {
+      const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      const cappedHeight = Math.min(keyboardHeight, window.innerHeight * 0.5)
+      document.documentElement.style.setProperty('--keyboard-offset', `${cappedHeight}px`)
+    }
+
+    updateViewport()
+    viewport.addEventListener('resize', updateViewport)
+    viewport.addEventListener('scroll', updateViewport)
+
+    return () => {
+      viewport.removeEventListener('resize', updateViewport)
+      viewport.removeEventListener('scroll', updateViewport)
+      document.documentElement.style.setProperty('--keyboard-offset', '0px')
+    }
+  }, [])
 
   const sortedRooms = useMemo(
     () => [...rooms].sort((a, b) => b.players.length - a.players.length),
