@@ -147,7 +147,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-panel px-6 py-7 text-center shadow-card">
             <p className="text-[11px] uppercase tracking-[0.3em] text-slate-500">加入成功</p>
             <h3 className="mt-2 text-lg font-semibold">请选择角色</h3>
-            <p className="mt-2 text-xs text-slate-400">画家负责绘制，猜谜者负责答题。</p>
             <div className="mt-6 grid gap-3">
               <button
                 className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-3 text-xs font-semibold text-accent hover:bg-accent/30"
@@ -169,7 +168,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-panel px-6 py-6 text-center shadow-card">
             <h4 className="text-base font-semibold">确认接管画家？</h4>
-            <p className="mt-2 text-xs text-slate-400">当前画家将自动变为猜谜者。</p>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
                 className="px-4 py-2 rounded-lg bg-white/10 text-sm text-slate-200 hover:bg-white/15"
@@ -198,7 +196,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         )}
           {room.phase === 'reveal' && showNextPrompt && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/60 text-xs text-slate-200">
-              本轮结束，重新选择角色后可开始下一轮
+              本轮结束
             </div>
           )}
           <button
@@ -214,11 +212,8 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
               {room.timeLeft}s
             </div>
           )}
-          <div className="flex items-center justify-end mb-4">
-            <div className="flex flex-col items-end gap-2">
-              {selfPlayer?.role !== 'painter' && (
-                <span className="text-[11px] text-slate-500">只有画家可以开始游戏</span>
-              )}
+          <div className="flex items-center justify-start mb-4">
+            <div className="flex flex-col items-start gap-2">
               <div className="flex gap-2">
                 {selfPlayer?.role === 'guesser' && (
                   <button
@@ -249,9 +244,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
             {selfPlayer?.role === 'painter' && room.word && (
               <span className="px-2 py-1 rounded bg-accent/20 text-accent">词：{room.word}</span>
             )}
-            {selfPlayer?.role === 'painter' && room.hint && (
-              <span className="px-2 py-1 rounded bg-accent2/15 text-accent2">提示：{room.hint}</span>
-            )}
             {painter && <span className="px-2 py-1 rounded bg-white/10">画手：{painter.name}</span>}
             {selfPlayer?.role && (
               <span className="px-2 py-1 rounded bg-white/10">
@@ -274,7 +266,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       <section className="room-chat flex flex-col bg-panel/80 border-t border-white/5 min-h-0">
         <div className="p-4 border-b border-white/5">
           <h3 className="text-base font-semibold">猜词 / 聊天</h3>
-          <p className="text-xs text-slate-400 mt-1">与房间玩家互动，也可请 AI 协助。</p>
         </div>
         <div className="flex-1 grid grid-rows-[1fr_auto] min-h-0">
           <div className="overflow-y-auto p-4 space-y-2" ref={chatRef}>

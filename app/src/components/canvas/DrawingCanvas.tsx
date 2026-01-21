@@ -105,11 +105,6 @@ export const DrawingCanvas: FC<Props> = ({ paths, onPath, painterId, selfId }) =
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       />
-      {painterId && painterId !== selfId && (
-        <div className="absolute top-3 right-3 px-3 py-2 rounded bg-black/60 text-xs text-slate-200">
-          轮到其他玩家绘制
-        </div>
-      )}
     </div>
   )
 }
