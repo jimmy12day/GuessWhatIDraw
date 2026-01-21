@@ -4,7 +4,6 @@ import { DrawingCanvas } from './canvas/DrawingCanvas'
 import { useRoomsStore } from '../state/rooms'
 import { useAiGuess } from '../mock/useAiGuess'
 import { Fireworks } from './ui/Fireworks'
-import { OptionsGrid } from './ui/OptionsGrid'
 
 import type { Room } from '../state/rooms'
 
@@ -31,10 +30,12 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   const room = rooms.find((r) => r.id === roomId) as Room | undefined
   const roomKey = room?.id
   const roomPhase = room?.phase
+  const winnerName = room?.winnerName
   const selfPlayer = room?.players.find((player) => player.id === self.id)
   const [guessText, setGuessText] = useState('')
   const [aiResult, setAiResult] = useState<string>('')
   const [showFireworks, setShowFireworks] = useState(false)
+  const [winnerText, setWinnerText] = useState('')
   const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false)
   const chatRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<number | null>(null)
@@ -58,6 +59,8 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     if (roomPhase === 'drawing') {
       const promptResetId = window.setTimeout(() => {
         setAiResult('')
+        setShowFireworks(false)
+        setWinnerText('')
       }, 0)
       if (timerRef.current) window.clearInterval(timerRef.current)
       let timeLeft = 60
@@ -76,9 +79,18 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     }
     if (roomPhase === 'reveal') {
       if (timerRef.current) window.clearInterval(timerRef.current)
+      if (winnerName) {
+        setShowFireworks(true)
+        setWinnerText(`${winnerName} ✓`)
+        const timeoutId = window.setTimeout(() => {
+          setShowFireworks(false)
+          setWinnerText('')
+        }, 3000)
+        return () => window.clearTimeout(timeoutId)
+      }
     }
     return undefined
-  }, [endRound, resetRoles, roomKey, roomPhase, setTimeLeft])
+  }, [endRound, resetRoles, roomKey, roomPhase, setTimeLeft, winnerName])
 
   if (!room) return null
 
@@ -89,8 +101,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     setGuessText('')
     if (res.isCorrect) {
       setAiResult('猜对了！')
-      setShowFireworks(true)
-      setTimeout(() => setShowFireworks(false), 3000)
       endRound(room.id, self.name)
     } else {
       setAiResult('AI判定未命中')
@@ -177,6 +187,13 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       )}
       <section className="room-stage border-b border-white/5 bg-slate-950/40 backdrop-blur p-4 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
+        {winnerText && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
+            <div className="px-5 py-3 rounded-xl bg-black/70 text-lg font-semibold text-white">
+              {winnerText}
+            </div>
+          </div>
+        )}
           <button
             className="absolute top-3 right-3 h-11 w-11 rounded-full bg-black/70 text-xl text-slate-100 hover:bg-black/80"
             onClick={onExit}
@@ -220,7 +237,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           {selfPlayer?.role === 'painter' && room.word && (
             <div className="mb-3 text-xs text-accent">{room.word}</div>
           )}
-        {selfPlayer?.role === 'painter' && <OptionsGrid options={room.answerOptions} />}
         <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/5 shadow-card">
           <DrawingCanvas
             roomId={room.id}
