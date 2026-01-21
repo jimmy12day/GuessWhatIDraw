@@ -148,7 +148,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
             <p className="text-[11px] uppercase tracking-[0.3em] text-slate-500">加入成功</p>
             <h3 className="mt-2 text-lg font-semibold">请选择角色</h3>
             <p className="mt-2 text-xs text-slate-400">画家负责绘制，猜谜者负责答题。</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="mt-6 grid gap-3">
               <button
                 className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-3 text-xs font-semibold text-accent hover:bg-accent/30"
                 onClick={() => handleRoleSelect('painter')}
@@ -187,7 +187,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           </div>
         </div>
       )}
-      <section className="room-stage border-r border-white/5 bg-slate-950/40 backdrop-blur p-4 sm:p-6 flex flex-col min-h-0">
+      <section className="room-stage border-b border-white/5 bg-slate-950/40 backdrop-blur p-4 flex flex-col min-h-0">
         {showFireworks && <Fireworks />}
         {room.phase === 'reveal' && room.winnerName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -271,7 +271,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
         </div>
       </section>
 
-      <section className="room-chat flex flex-col bg-panel/80 border-l border-white/5 min-h-0">
+      <section className="room-chat flex flex-col bg-panel/80 border-t border-white/5 min-h-0">
         <div className="p-4 border-b border-white/5">
           <h3 className="text-base font-semibold">猜词 / 聊天</h3>
           <p className="text-xs text-slate-400 mt-1">与房间玩家互动，也可请 AI 协助。</p>

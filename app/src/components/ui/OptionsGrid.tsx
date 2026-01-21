@@ -5,7 +5,7 @@ type Props = {
 export const OptionsGrid = ({ options }: Props) => {
   if (!options || options.length === 0) return null
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 text-xs">
+    <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
       {options.map((opt) => (
         <div
           key={opt}

@@ -33,7 +33,7 @@ export const Lobby: FC<Props> = ({ rooms, onJoin, onCreate }) => {
             </button>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4">
           {rooms.map((room) => (
             <div
               key={room.id}
