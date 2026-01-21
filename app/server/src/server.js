@@ -24,6 +24,9 @@ const removePlayer = (roomId, playerId) => {
   const room = state.rooms.find((target) => target.id === roomId)
   if (!room) return
   room.players = room.players.filter((player) => player.id !== playerId)
+  if (room.players.length === 0) {
+    state.rooms = state.rooms.filter((target) => target.id !== roomId)
+  }
 }
 
 const addPlayer = (roomId, player) => {
@@ -86,7 +89,20 @@ wss.on('connection', (ws) => {
         state.rooms = payload.rooms.map((room) => {
           const existingRoom = state.rooms.find((target) => target.id === room.id)
           if (!existingRoom) return room
-          return { ...room, players: existingRoom.players }
+          const nextPlayers = existingRoom.players.map((player) => {
+            const incoming = Array.isArray(room.players)
+              ? room.players.find((p) => p.id === player.id)
+              : undefined
+            return incoming
+              ? {
+                  ...player,
+                  role: incoming.role ?? player.role,
+                  isHost: incoming.isHost ?? player.isHost,
+                  score: incoming.score ?? player.score,
+                }
+              : player
+          })
+          return { ...room, players: nextPlayers }
         })
         broadcast({ type: 'rooms:update', rooms: state.rooms })
       }

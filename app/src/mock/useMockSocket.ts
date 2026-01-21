@@ -26,15 +26,17 @@ export const useMockSocket = (roomId: string) => {
       ws.addEventListener('open', () => {
         ws?.send(JSON.stringify({ type: 'rooms:request' } satisfies RoomsRequest))
         const self = selfRef.current
-        ws?.send(
-          JSON.stringify({
-            type: 'presence:update',
-            roomId,
-            playerId: self.id,
-            playerName: self.name,
-            playerColor: self.color,
-          } satisfies PresencePayload),
-        )
+        if (roomId && roomId !== 'lobby') {
+          ws?.send(
+            JSON.stringify({
+              type: 'presence:update',
+              roomId,
+              playerId: self.id,
+              playerName: self.name,
+              playerColor: self.color,
+            } satisfies PresencePayload),
+          )
+        }
       })
 
       ws.addEventListener('message', (event) => {
@@ -62,6 +64,7 @@ export const useMockSocket = (roomId: string) => {
 
     const handlePresence = () => {
       if (ws?.readyState !== WebSocket.OPEN) return
+      if (!roomId || roomId === 'lobby') return
       const self = selfRef.current
       ws.send(
         JSON.stringify({
@@ -76,6 +79,7 @@ export const useMockSocket = (roomId: string) => {
 
     const handleUnload = () => {
       if (ws?.readyState !== WebSocket.OPEN) return
+      if (!roomId || roomId === 'lobby') return
       const self = selfRef.current
       ws.send(
         JSON.stringify({
