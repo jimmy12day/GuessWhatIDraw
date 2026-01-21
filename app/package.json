@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "npm run test:smoke",
+    "test:lint": "npm run lint",
+    "test:smoke": "node scripts/smoke-test.js",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -3,11 +3,14 @@ import { nanoid } from 'nanoid'
 import { RoomView } from './components/RoomView'
 import { Lobby } from './components/Lobby'
 import { useRoomsStore } from './state/rooms'
+import { useMockSocket } from './mock/useMockSocket'
 import './App.css'
 
 function App() {
   const { rooms, createRoom, joinRoom, leaveRoom } = useRoomsStore()
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
+
+  useMockSocket(currentRoomId ?? 'lobby')
 
   const sortedRooms = useMemo(
     () => [...rooms].sort((a, b) => b.players.length - a.players.length),

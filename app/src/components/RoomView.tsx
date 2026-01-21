@@ -2,7 +2,6 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { DrawingCanvas } from './canvas/DrawingCanvas'
 import { useRoomsStore } from '../state/rooms'
-import { useMockSocket } from '../mock/useMockSocket'
 import { useAiGuess } from '../mock/useAiGuess'
 import { Fireworks } from './ui/Fireworks'
 import { CountdownBadge } from './ui/CountdownBadge'
@@ -22,6 +21,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     addMessage,
     addPath,
     clearPaths,
+    joinRoom,
     startRound,
     guess,
     setTimeLeft,
@@ -38,7 +38,6 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   const chatRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<number | null>(null)
 
-  useMockSocket(roomId)
   const ai = useAiGuess()
 
   useEffect(() => {
@@ -50,10 +49,17 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   const painter = useMemo(() => room?.players.find((p) => p.id === room?.painterId), [room])
 
   useEffect(() => {
+    if (!room || selfPlayer) return
+    joinRoom(room.id)
+  }, [joinRoom, room, selfPlayer])
+
+  useEffect(() => {
     if (!room) return
     if (room.phase === 'drawing') {
-      setShowNextPrompt(false)
-      setAiResult('')
+      const promptResetId = window.setTimeout(() => {
+        setShowNextPrompt(false)
+        setAiResult('')
+      }, 0)
       if (timerRef.current) window.clearInterval(timerRef.current)
       let timeLeft = 60
       setTimeLeft(room.id, timeLeft)
@@ -66,15 +72,19 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           setTimeLeft(room.id, timeLeft)
         }
       }, 1000)
+      return () => window.clearTimeout(promptResetId)
     }
     if (room.phase === 'reveal') {
       if (timerRef.current) window.clearInterval(timerRef.current)
-      setShowNextPrompt(true)
-      const timeoutId = window.setTimeout(() => setShowNextPrompt(false), 5000)
-      return () => window.clearTimeout(timeoutId)
+      const promptStartId = window.setTimeout(() => setShowNextPrompt(true), 0)
+      const promptEndId = window.setTimeout(() => setShowNextPrompt(false), 5000)
+      return () => {
+        window.clearTimeout(promptStartId)
+        window.clearTimeout(promptEndId)
+      }
     }
     return undefined
-  }, [room?.phase])
+  }, [endRound, room, setTimeLeft])
 
   if (!room) return null
 
