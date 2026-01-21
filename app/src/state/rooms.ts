@@ -60,9 +60,42 @@ const randomColor = () => {
   return palette[Math.floor(Math.random() * palette.length)]
 }
 
+const namePool = [
+  'Nova',
+  'Atlas',
+  'Luna',
+  'Jasper',
+  'Hazel',
+  'Felix',
+  'Orion',
+  'Milo',
+  'Ivy',
+  'Zara',
+  'Rhea',
+  'Niko',
+  'Aria',
+  'Theo',
+  'Skye',
+  'Ezra',
+  'Juno',
+  'Remy',
+  'Sage',
+  'Vera',
+  'Kai',
+  'Elio',
+  'Rory',
+  'Luca',
+]
+
+const randomName = () => {
+  const base = namePool[Math.floor(Math.random() * namePool.length)]
+  const suffix = Math.floor(Math.random() * 90 + 10)
+  return `${base}-${suffix}`
+}
+
 const createPlayer = (): Player => ({
   id: nanoid(6),
-  name: `玩家-${Math.floor(Math.random() * 90 + 10)}`,
+  name: randomName(),
   score: 0,
   isHost: true,
   color: randomColor(),
