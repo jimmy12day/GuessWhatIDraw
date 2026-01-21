@@ -286,7 +286,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
           </div>
         </div>
         <div className="p-4 border-t border-white/5 bg-panel/90">
-          <h4 className="text-xs text-slate-400 mb-2">玩家</h4>
+          <h4 className="text-xs text-slate-400 mb-2">玩家 · {self.name}</h4>
           <div className="text-xs text-slate-300">当前玩家数：{room.players.length}</div>
         </div>
       </section>
