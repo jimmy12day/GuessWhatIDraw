@@ -29,6 +29,8 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
     setPlayerRole,
   } = useRoomsStore()
   const room = rooms.find((r) => r.id === roomId) as Room | undefined
+  const roomKey = room?.id
+  const roomPhase = room?.phase
   const selfPlayer = room?.players.find((player) => player.id === self.id)
   const [guessText, setGuessText] = useState('')
   const [aiResult, setAiResult] = useState<string>('')
@@ -54,27 +56,27 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
   }, [joinRoom, room, selfPlayer])
 
   useEffect(() => {
-    if (!room) return
-    if (room.phase === 'drawing') {
+    if (!roomKey || !roomPhase) return
+    if (roomPhase === 'drawing') {
       const promptResetId = window.setTimeout(() => {
         setShowNextPrompt(false)
         setAiResult('')
       }, 0)
       if (timerRef.current) window.clearInterval(timerRef.current)
       let timeLeft = 60
-      setTimeLeft(room.id, timeLeft)
+      setTimeLeft(roomKey, timeLeft)
       timerRef.current = window.setInterval(() => {
         timeLeft -= 1
         if (timeLeft <= 0) {
           if (timerRef.current) window.clearInterval(timerRef.current)
-          endRound(room.id)
+          endRound(roomKey)
         } else {
-          setTimeLeft(room.id, timeLeft)
+          setTimeLeft(roomKey, timeLeft)
         }
       }, 1000)
       return () => window.clearTimeout(promptResetId)
     }
-    if (room.phase === 'reveal') {
+    if (roomPhase === 'reveal') {
       if (timerRef.current) window.clearInterval(timerRef.current)
       const promptStartId = window.setTimeout(() => setShowNextPrompt(true), 0)
       const promptEndId = window.setTimeout(() => setShowNextPrompt(false), 5000)
@@ -84,7 +86,7 @@ export const RoomView: FC<Props> = ({ roomId, onExit }) => {
       }
     }
     return undefined
-  }, [endRound, room, setTimeLeft])
+  }, [endRound, roomKey, roomPhase, setTimeLeft])
 
   if (!room) return null
 
